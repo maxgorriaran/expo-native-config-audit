@@ -51,6 +51,7 @@ export function readIos(projectText, plistText, selection) {
   function field(key, setting) {
     const value = plist[key];
     if (value === `$(${setting})` || value === '${' + setting + '}') {
+      need(!Object.hasOwn(settings, 'INFOPLIST_EXPAND_BUILD_SETTINGS') || settings.INFOPLIST_EXPAND_BUILD_SETTINGS === 'YES', 'UNSUPPORTED_SETTINGS', 'Covered plist references require enabled build-setting expansion; disabled or unresolved expansion is unsupported.');
       need(nonempty(settings[setting]) && !settings[setting].includes('$'), 'UNSUPPORTED_SETTINGS', 'A covered build setting is missing or unresolved.');
       return settings[setting];
     }

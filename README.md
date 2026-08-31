@@ -4,16 +4,18 @@ Read-only Node CLI comparing selected **static declarations** in Expo app.json
 and native iOS/Android files. Reports drift without changing an app or executing
 its configuration. Complements Expo Doctor; never disables its checks.
 
-**Local v0.1 preview, not a published release.** No public install command exists.
+**Public source preview; not published to npm.** Clone the repository to try it.
 Licensed under MIT; the package remains marked private to prevent npm publication.
 This is not certification of an effective build, permission consent, or release
 readiness. No blanket Expo SDK compatibility claim is made.
 
 ## Try the synthetic example
 
-Requires Node 22 or newer and npm, on macOS or Linux. From this project folder:
+Requires Node 22 or newer and npm, on macOS or Linux:
 
 ```sh
+git clone https://github.com/maxgorriaran/expo-native-config-audit.git
+cd expo-native-config-audit
 npm ci --ignore-scripts
 npm run demo
 npm run demo -- --format json
@@ -23,6 +25,20 @@ npm run smoke:package
 
 The demo uses original synthetic fixtures, including three iOS target
 configurations and an extension. They are parser fixtures, not buildable apps.
+
+For a practical drift scenario, try the [stale native version example](examples/version-drift/README.md):
+
+```sh
+node bin/audit.mjs --root examples/version-drift --platform android \
+  --android-gradle android/app/build.gradle \
+  --android-manifest android/app/src/main/AndroidManifest.xml
+```
+
+It reports app.json version/build `1.3.0`/`43` versus native `1.2.0`/`42`, then
+exits **1**. The example includes exact, regression-tested output. It models a
+realistic mistake using original synthetic declarations; it is not a buildable
+Expo project or real-app validation. Examples are available in the clone and
+excluded from the packed npm artifact.
 
 For a selected app, use its app root and explicit native paths:
 
@@ -64,7 +80,11 @@ within the selected app root. Absolute paths and root escapes are unsupported.
 Binding checks do not depend on the terminal's working directory.
 
 Literal plist fields are compared directly. The corresponding Xcode build
-setting is consulted only when the plist references it. Unselected targets and
+setting is consulted only when the plist references it. References are unsupported
+when the selected project's/target's effective INFOPLIST_EXPAND_BUILD_SETTINGS
+is explicitly disabled or unresolved. Only an omitted setting (the default
+expansion behavior) or literal YES permits substitution. Literal covered plist
+values remain supported with expansion disabled. Unselected targets and
 configurations are counted and explicitly unaudited, including extensions.
 Build scripts, command-line settings, dependencies and effective native builds
 are never resolved.
@@ -96,6 +116,9 @@ selected main manifest. The final merged manifest is not inspected. Other
 native permissions are outside the requested subset, not automatically drift.
 Extra native schemes are allowed. An absent Expo scheme or permission request
 is noted as not requested; it does not claim permission completeness.
+Android uri-relative-filter-group elements are unsupported, including nested
+query, fragment and path restrictions, regardless of allow/block rules. The
+auditor does not resolve URI matching rules or infer platform-specific effects.
 
 Reports include a schema version, selected scope, stable check IDs, coverage,
 checks, issues and notes. Expected/actual values appear only for identifiers,
@@ -135,11 +158,13 @@ is separate from the pure comparator and report formatting.
 
 ## Verification and publication gates
 
-Observed locally on macOS: all 94 tests and the fresh-consumer package smoke
+Observed locally on macOS: all 117 tests and the fresh-consumer package smoke
 passed on Node 22.23.2 and 24.20.0 (also on the local Node 25.8.2 runtime).
 The package inventory contained 14 intended files, including LICENSE. Source and fresh-consumer
 dependency audits reported no known vulnerabilities at verification time.
 These results are synthetic/local evidence only, not real-app acceptance.
+The plist-expansion and URI-filter-group fixes and the documented drift example
+have local verification only; the hosted evidence below predates these changes.
 
 `npm test` covers deliberate drift, matching declarations, malformed and
 unsupported forms, ambiguous selections, unsafe paths, deterministic CLI output,
@@ -155,14 +180,16 @@ that every possible secret is absent.
 
 Hosted CI on August 31, 2026 passed all four macOS/Linux and Node 22/24 jobs:
 94 tests and fresh-consumer package checks in each job. See the
-[run for source commit 8156a8d](https://github.com/maxgorriaran/expo-native-config-audit/actions/runs/33403400630).
+[run for published commit c9651c3](https://github.com/maxgorriaran/expo-native-config-audit/actions/runs/33403585430).
 GitHub reported a non-blocking Node runtime deprecation warning for the v4
 checkout/setup actions; those steps completed successfully.
 
 An independent bounded review accepted the source/package at 8156a8d with
 limitations after the Gradle integer correction. Neither local nor hosted synthetic checks
 establish real-app compatibility, simulator/device behavior or release readiness.
-Publication still requires explicit authorization of the final candidate.
+That review did not cover the subsequent plist-expansion and URI-filter-group
+corrections. Publication of these changes still requires final review and
+authorization; npm publication remains disabled.
 
 ## License
 
@@ -179,6 +206,8 @@ License selection does not authorize publication or establish release readiness.
 - [Expo Doctor app-config/native warning](https://docs.expo.dev/versions/v54.0.0/config/package-json/#appconfigfieldsnotsyncedcheck)
 - [Expo permission declarations](https://docs.expo.dev/guides/permissions/)
 - [Android manifest merging](https://developer.android.com/build/manage-manifests)
+- [Android URI-relative filter groups](https://developer.android.com/guide/topics/manifest/uri-relative-filter-group-element)
+- [Apple build settings reference](https://developer.apple.com/documentation/xcode/build-settings-reference)
 
 Expo Doctor warns about app configuration coexisting with native directories
 that EAS Build will not synchronize. This CLI adds bounded field comparisons;

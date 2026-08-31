@@ -1,0 +1,10 @@
+Selected declaration checks found drift.
+Coverage: complete-for-selected-declarations
+Scope: {"platforms":["android"],"config":"app.json","android":{"gradle":"android/app/build.gradle","manifest":"android/app/src/main/AndroidManifest.xml"}}
+DRIFT android.build expected=43 actual=42
+MATCH android.id expected="org.example.trailnotes" actual="org.example.trailnotes"
+MATCH android.scheme.trailnotes expected="trailnotes" actual="trailnotes"
+DRIFT android.version expected="1.3.0" actual="1.2.0"
+NOTE Only selected source declarations are audited; effective builds, merged manifests, other targets/configurations and runtime behavior are not proved.
+NOTE Android: 0 other permission declaration(s) are outside the supported subset.
+NOTE android: no explicit permissions checks requested.

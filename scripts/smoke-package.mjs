@@ -60,6 +60,19 @@ try {
   assert.equal(JSON.parse(match.stdout).checks.length, 14);
   assert.equal(invoke().stdout, match.stdout);
   assert.equal(treeHash(target), before);
+  for (const [name, transform, issue] of [
+    [paths.project, text => text.replace('INFOPLIST_FILE =', 'INFOPLIST_EXPAND_BUILD_SETTINGS = NO; INFOPLIST_FILE ='), 'ios.UNSUPPORTED_SETTINGS'],
+    [paths.manifest, text => text.replace('</intent-filter>', '<uri-relative-filter-group><data android:query="preview" /></uri-relative-filter-group></intent-filter>'), 'android.UNSUPPORTED_SCHEME'],
+  ]) {
+    const selected = join(target, name), original = readFileSync(selected, 'utf8');
+    writeFileSync(selected, transform(original));
+    const unsupportedBefore = treeHash(target), unsupported = invoke();
+    assert.equal(unsupported.status, 2, unsupported.stdout);
+    assert.ok(JSON.parse(unsupported.stdout).issues.some(item => item.id === issue));
+    assert.equal(treeHash(target), unsupportedBefore);
+    writeFileSync(selected, original);
+  }
+  assert.equal(treeHash(target), before);
   writeFileSync(join(target, paths.gradle), readFileSync(join(target, paths.gradle), 'utf8').replace('versionCode 17', 'versionCode 18'));
   const driftBefore = treeHash(target), drift = invoke();
   assert.equal(drift.status, 1, drift.stdout); assert.equal(treeHash(target), driftBefore);
@@ -67,5 +80,5 @@ try {
   const unsupportedBefore = treeHash(target), unsupported = invoke();
   assert.equal(unsupported.status, 2, unsupported.stdout); assert.equal(treeHash(target), unsupportedBefore);
   command('npm', ['audit', '--omit=dev'], consumer);
-  console.log(JSON.stringify({ status: 'PASS', packageFiles: inventory, checks: ['installed executable', 'matching declarations', 'drift exit 1', 'unsupported exit 2', 'deterministic output', 'target non-mutation', 'package inventory and bounded privacy scan', 'MIT metadata and packaged notice', 'private publication safeguard', 'dependency notices preserved', 'consumer dependency audit'] }, null, 2));
+  console.log(JSON.stringify({ status: 'PASS', packageFiles: inventory, checks: ['installed executable', 'matching declarations', 'drift exit 1', 'unsupported exit 2', 'disabled plist expansion exit 2', 'URI-relative filter group exit 2', 'deterministic output', 'target non-mutation', 'package inventory and bounded privacy scan', 'MIT metadata and packaged notice', 'private publication safeguard', 'dependency notices preserved', 'consumer dependency audit'] }, null, 2));
 } finally { rmSync(scratch, { recursive: true, force: true }); }

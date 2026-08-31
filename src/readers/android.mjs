@@ -61,6 +61,7 @@ export function readAndroid(gradleText, manifestText, selection) {
   need(manifest.tagName === 'manifest', 'INVALID_MANIFEST', 'Expected a manifest document.');
   function validate(node) {
     need(!node.namespaceURI, 'UNSUPPORTED_MANIFEST', 'Namespaced manifest elements are unsupported.');
+    need(node.tagName !== 'uri-relative-filter-group', 'UNSUPPORTED_SCHEME', 'URI-relative filter groups and their nested restrictions are unsupported.');
     for (const attribute of Array.from(node.attributes)) {
       if (attribute.namespaceURI !== TOOLS) continue;
       need(node.tagName === 'uses-permission' && attribute.localName === 'node' && attribute.value === 'remove', 'UNSUPPORTED_MANIFEST', 'Only permission removal merger directives are supported.');

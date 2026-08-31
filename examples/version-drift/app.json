@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Trail Notes",
+    "slug": "trail-notes",
+    "version": "1.3.0",
+    "scheme": "trailnotes",
+    "android": {
+      "package": "org.example.trailnotes",
+      "versionCode": 43
+    }
+  }
+}
