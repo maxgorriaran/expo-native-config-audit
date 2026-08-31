@@ -153,11 +153,16 @@ notes, tests, fixtures and workflows are excluded. `.gitignore` is not relied
 on for packaging. The privacy scan is bounded supporting evidence, not proof
 that every possible secret is absent.
 
-Local fixture/CLI/package verification does not establish hosted CI, real-app
-compatibility, simulator/device behavior or release readiness. The CI workflow
-is prepared for Node 22/24 on macOS/Linux; no hosted run is claimed. Before a
-release: independently review the exact licensed source/package, verify hosted
-CI, and obtain explicit publication authorization.
+Hosted CI on August 31, 2026 passed all four macOS/Linux and Node 22/24 jobs:
+94 tests and fresh-consumer package checks in each job. See the
+[run for source commit 8156a8d](https://github.com/maxgorriaran/expo-native-config-audit/actions/runs/33403400630).
+GitHub reported a non-blocking Node runtime deprecation warning for the v4
+checkout/setup actions; those steps completed successfully.
+
+An independent bounded review accepted the source/package at 8156a8d with
+limitations after the Gradle integer correction. Neither local nor hosted synthetic checks
+establish real-app compatibility, simulator/device behavior or release readiness.
+Publication still requires explicit authorization of the final candidate.
 
 ## License
 
