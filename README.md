@@ -63,11 +63,11 @@ dependency loading from the audited app, or environment-file reads occur.
 | Input | Supported | Incomplete (exit 2) |
 | --- | --- | --- |
 | Expo | Strict UTF-8 app.json; root object or `expo` wrapper; explicit identifiers/builds; root/platform versions and string/array schemes | Dynamic sibling app.config.js/ts/mjs/cjs/mts/cts; competing app.config.json; nonempty config plugins; inferred values; custom Android intentFilters |
-| iOS project | Bounded OpenStep dictionaries, arrays, strings; comments; selected application target and one named configuration; project settings then target settings | xcconfig inheritance; custom source roots; conditional settings; unsupported escapes/data syntax; ambiguous/missing target/configuration |
+| iOS project | Bounded OpenStep dictionaries, arrays, strings; comments; selected application target and one named configuration; project settings then target settings; exact signing exception below | xcconfig inheritance; custom source roots; other conditional settings; unsupported escapes/data syntax; ambiguous/missing target/configuration |
 | iOS plist | XML dict/array/string/integer/boolean values; conventional Apple plist DOCTYPE (not fetched); explicit plist binding via INFOPLIST_FILE | Binary plist; other value types; DTD/entity declarations; generated/preprocessed plist; INFOPLIST_KEY overrides |
 | iOS identity/version/build | Literal CFBundleIdentifier, CFBundleShortVersionString, CFBundleVersion; or exact references to PRODUCT_BUNDLE_IDENTIFIER, MARKETING_VERSION, CURRENT_PROJECT_VERSION | Other substitutions, missing native values; covered fields overridden through Expo ios.infoPlist |
 | Android | One selected module's build.gradle and src/main/AndroidManifest.xml; literal grammar below | Kotlin DSL, buildTypes, flavors, suffixes, scripts, expressions, variables, custom source sets, duplicate/competing assignments |
-| Schemes | Required set inclusion; root/platform declarations combined; iOS CFBundleURLTypes; Android VIEW + DEFAULT + BROWSABLE in one intent filter | Scheme placeholders, restricted data attributes, missing filter structure, merger directives on filters |
+| Schemes | Lowercase Expo requests; required set inclusion; root/platform declarations combined; iOS CFBundleURLTypes with ASCII case canonicalization; Android literal lowercase schemes with VIEW + DEFAULT + BROWSABLE in one intent filter | Invalid schemes or placeholders (including extras), restricted data attributes, missing filter structure, merger directives on filters |
 | iOS permissions | Explicit NSCameraUsageDescription and NSMicrophoneUsageDescription equality | Other requested usage-description keys, nonliteral descriptions; no plugin-derived policy |
 | Android permissions | Explicit CAMERA/RECORD_AUDIO requirements and fully qualified blockedPermissions; native uses-permission plus tools:node="remove" | Other requested permissions, SDK/attribute qualifiers, duplicate declarations, other merger directives |
 
@@ -78,6 +78,13 @@ Android versionCode is a positive safe integer. This subset is not store validat
 INFOPLIST_FILE must be relative to the Xcode project source directory and resolve
 within the selected app root. Absolute paths and root escapes are unsupported.
 Binding checks do not depend on the terminal's working directory.
+
+The sole conditional-setting exception is the exact key
+`CODE_SIGN_IDENTITY[sdk=iphoneos*]` with the literal value `iPhone Developer`,
+in a selected project or target configuration. It is outside the compared fields;
+the auditor does not evaluate signing or conditional settings. Other selectors,
+values, unresolved expressions, and conditional declaration/expansion overrides
+remain unsupported. This exception does not enable xcconfig inheritance.
 
 Literal plist fields are compared directly. The corresponding Xcode build
 setting is consulted only when the plist references it. References are unsupported
@@ -116,6 +123,15 @@ selected main manifest. The final merged manifest is not inspected. Other
 native permissions are outside the requested subset, not automatically drift.
 Extra native schemes are allowed. An absent Expo scheme or permission request
 is noted as not requested; it does not claim permission completeness.
+Native iOS schemes accept ASCII letters in either case and canonicalize to
+lowercase before set comparison. Valid extras do not create requested checks;
+an extra cannot substitute for a missing requested scheme. Every native value,
+including extras, must be valid before canonicalization and deduplication.
+The limits are 128 declarations across URL types and 256 characters per scheme.
+Malformed, unresolved, non-string, or oversized extras return incomplete coverage.
+This is static URI declaration comparison, not proof of URL registration or routing.
+Expo requests remain lowercase. Android validation and literal comparison do not
+use iOS canonicalization; Android scheme matching is case-sensitive.
 Android uri-relative-filter-group elements are unsupported, including nested
 query, fragment and path restrictions, regardless of allow/block rules. The
 auditor does not resolve URI matching rules or infer platform-specific effects.
@@ -158,13 +174,40 @@ is separate from the pure comparator and report formatting.
 
 ## Verification and publication gates
 
-Observed locally on macOS: all 117 tests and the fresh-consumer package smoke
+Earlier local verification on macOS: all 117 tests and the fresh-consumer package smoke
 passed on Node 22.23.2 and 24.20.0 (also on the local Node 25.8.2 runtime).
 The package inventory contained 14 intended files, including LICENSE. Source and fresh-consumer
 dependency audits reported no known vulnerabilities at verification time.
 These results are synthetic/local evidence only, not real-app acceptance.
 The plist-expansion and URI-filter-group fixes and the documented drift example
 have local verification only; the hosted evidence below predates these changes.
+
+The bounded iOS compatibility slice has local verification on Node 22.23.2 and
+24.20.0: 188 tests, including 71 focused iOS regressions, and the existing
+fresh-consumer package smoke pass on each runtime. A separate generated-app
+matrix exercises both the source CLI and a freshly packed/installed executable,
+selecting Debug and Release individually. Matching declarations return 0;
+changing only Expo version/build metadata returns 1 with exactly those two
+differences; an unsupported conditional identifier returns 2, including when
+metadata also drifts. Repeated audits preserve file inventories, modes and bytes.
+
+That sample uses official blank TypeScript and native templates 57.0.20,
+create-expo-app 4.0.0, Expo 57.0.18, React Native 0.86.3 and React 19.2.3, with
+a frozen dependency lock. Explicit identifiers, version 1.2.3, iOS build 7,
+Android versionCode 7 and a lowercase requested scheme were configured before
+generation. Matching and metadata-drift cases retain the generated iOS project
+and plist bytes, including the conditional signing setting and extra mixed-case
+native scheme. Unsupported cases add a conditional setting only in disposable
+audit-input copies. The original unconfigured sample still returns 2 for missing
+explicit build metadata; Expo defaults are not inferred.
+
+This proves selected static iOS declarations in one configured sample before
+CocoaPods integration. Broad real-app compatibility remains unproven. Android
+generated-file compatibility, native builds, merged/effective settings, URL
+routing and simulator/device behavior are not established. Environment/key
+contents and dependency directories are excluded from app content-hash proof;
+environment/key file metadata is checked separately. The slice remains
+uncommitted for independent review; no hosted CI or publication of it is claimed.
 
 `npm test` covers deliberate drift, matching declarations, malformed and
 unsupported forms, ambiguous selections, unsafe paths, deterministic CLI output,
@@ -208,6 +251,8 @@ License selection does not authorize publication or establish release readiness.
 - [Android manifest merging](https://developer.android.com/build/manage-manifests)
 - [Android URI-relative filter groups](https://developer.android.com/guide/topics/manifest/uri-relative-filter-group-element)
 - [Apple build settings reference](https://developer.apple.com/documentation/xcode/build-settings-reference)
+- [URI scheme syntax and canonicalization](https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1)
+- [Android scheme matching rules](https://developer.android.com/guide/topics/manifest/data-element)
 
 Expo Doctor warns about app configuration coexisting with native directories
 that EAS Build will not synchronize. This CLI adds bounded field comparisons;

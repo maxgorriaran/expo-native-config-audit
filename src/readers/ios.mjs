@@ -1,8 +1,14 @@
 import { posix } from 'node:path';
 import { parseData } from '../syntax.mjs';
 import { parsePlist } from './xml.mjs';
-import { IOS_PERMISSIONS, schemes } from './expo.mjs';
+import { IOS_PERMISSIONS } from './expo.mjs';
 import { requireInput as need, object, nonempty } from '../errors.mjs';
+
+function nativeSchemes(values) {
+  // iOS URI scheme canonicalization must not change Android's literal rules.
+  need(values.length <= 128 && values.every(value => nonempty(value) && value.length <= 256 && /^[A-Za-z][A-Za-z0-9+.-]*$/.test(value)), 'INVALID_SCHEME', 'Native iOS schemes must be literal URI scheme strings.');
+  return [...new Set(values.map(value => value.toLowerCase()))].sort();
+}
 
 export function readIos(projectText, plistText, selection) {
   const project = parseData(projectText, 'pbx');
@@ -28,7 +34,8 @@ export function readIos(projectText, plistText, selection) {
     const item = matches[0];
     need(!item.baseConfigurationReference && object(item.buildSettings), 'UNSUPPORTED_SETTINGS', 'xcconfig inheritance or missing build settings is unsupported.');
     const settings = item.buildSettings;
-    need(!Object.keys(settings).some(key => key.includes('[')), 'UNSUPPORTED_SETTINGS', 'Conditional build settings are unsupported.');
+    // This exact generated signing declaration does not resolve audited fields.
+    need(Object.entries(settings).every(([key, value]) => !key.includes('[') || (key === 'CODE_SIGN_IDENTITY[sdk=iphoneos*]' && value === 'iPhone Developer')), 'UNSUPPORTED_SETTINGS', 'Conditional build settings other than the supported signing declaration are unsupported.');
     return { settings, count: configurations.length };
   }
   const projectConfig = configuration(root.buildConfigurationList);
@@ -71,7 +78,7 @@ export function readIos(projectText, plistText, selection) {
     id: field('CFBundleIdentifier', 'PRODUCT_BUNDLE_IDENTIFIER'),
     version: field('CFBundleShortVersionString', 'MARKETING_VERSION'),
     build: field('CFBundleVersion', 'CURRENT_PROJECT_VERSION'),
-    schemes: schemes(types.flatMap(item => item.CFBundleURLSchemes)), permissions,
+    schemes: nativeSchemes(types.flatMap(item => item.CFBundleURLSchemes)), permissions,
     unauditedTargets: targets.length - 1,
     unauditedConfigurations: targetConfig.count - 1,
   };
