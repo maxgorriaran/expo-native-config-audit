@@ -1,0 +1,42 @@
+// !$*UTF8*$!
+// Synthetic parser fixture only, not a buildable application.
+{
+  archiveVersion = 1;
+  objectVersion = 56;
+  objects = {
+    PROJECT = {
+      isa = PBXProject;
+      targets = (APP, EXTENSION,);
+      buildConfigurationList = PROJECT_CONFIGS;
+    };
+    APP = {
+      isa = PBXNativeTarget;
+      name = Sample;
+      productType = "com.apple.product-type.application";
+      buildConfigurationList = APP_CONFIGS;
+    };
+    EXTENSION = {
+      isa = PBXNativeTarget;
+      name = SampleWidget;
+      productType = "com.apple.product-type.app-extension";
+      buildConfigurationList = EXTENSION_CONFIGS;
+    };
+    PROJECT_CONFIGS = { isa = XCConfigurationList; buildConfigurations = (PROJECT_RELEASE,); };
+    APP_CONFIGS = { isa = XCConfigurationList; buildConfigurations = (APP_RELEASE, APP_DEBUG, APP_STAGING,); };
+    EXTENSION_CONFIGS = { isa = XCConfigurationList; buildConfigurations = (EXTENSION_RELEASE,); };
+    PROJECT_RELEASE = { isa = XCBuildConfiguration; name = Release; buildSettings = { MARKETING_VERSION = 2.4.0; }; };
+    APP_RELEASE = {
+      isa = XCBuildConfiguration;
+      name = Release;
+      buildSettings = {
+        PRODUCT_BUNDLE_IDENTIFIER = org.example.sample;
+        CURRENT_PROJECT_VERSION = 17;
+        INFOPLIST_FILE = Sample/Info.plist;
+      };
+    };
+    APP_DEBUG = { isa = XCBuildConfiguration; name = Debug; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = org.example.sample.debug; }; };
+    APP_STAGING = { isa = XCBuildConfiguration; name = Staging; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = org.example.sample.staging; }; };
+    EXTENSION_RELEASE = { isa = XCBuildConfiguration; name = Release; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = org.example.sample.widget; }; };
+  };
+  rootObject = PROJECT;
+}

@@ -1,0 +1,20 @@
+{
+  "name": "expo-native-config-audit",
+  "version": "0.1.0-local.0",
+  "private": true,
+  "description": "Read-only comparison of selected static Expo and native configuration declarations",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "bin": { "expo-native-config-audit": "bin/audit.mjs" },
+  "exports": { ".": "./src/compare.mjs" },
+  "files": ["bin/", "src/", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "demo": "node bin/audit.mjs --root test/fixtures/matching --platform both --ios-project native/ios/Sample.xcodeproj/project.pbxproj --ios-plist native/ios/Sample/Info.plist --ios-target Sample --ios-configuration Release --android-gradle native/android/sample/build.gradle --android-manifest native/android/sample/src/main/AndroidManifest.xml",
+    "smoke:package": "node scripts/smoke-package.mjs"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "0.9.12"
+  }
+}

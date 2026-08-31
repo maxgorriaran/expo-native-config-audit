@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Sample",
+    "slug": "sample",
+    "version": "2.4.0",
+    "scheme": ["sample", "sample-auth"],
+    "ios": {
+      "bundleIdentifier": "org.example.sample",
+      "buildNumber": "17",
+      "scheme": "sample-ios",
+      "infoPlist": { "NSCameraUsageDescription": "Capture a sample photo." }
+    },
+    "android": {
+      "package": "org.example.sample",
+      "versionCode": 17,
+      "permissions": ["CAMERA"],
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+    }
+  }
+}

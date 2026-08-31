@@ -1,0 +1,15 @@
+// Synthetic declaration fixture; no Gradle execution required.
+plugins {
+    id 'com.android.application'
+}
+android {
+    namespace 'org.example.generated'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'org.example.sample'
+        minSdk 24
+        targetSdk 35
+        versionCode 17
+        versionName '2.4.0'
+    }
+}

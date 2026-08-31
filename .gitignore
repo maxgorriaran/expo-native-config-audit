@@ -1,0 +1,14 @@
+# Private handoff notes are never part of the public export.
+/.local/
+node_modules/
+coverage/
+dist/
+*.tgz
+.DS_Store
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.mobileprovision
